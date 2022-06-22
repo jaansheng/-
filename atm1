@@ -1,11 +1,26 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
+#include<time.h>
 
+struct Transaction
+{
+	char username[100];
+	time_t timestamp;
+	int type;//0-取款，1-存款
+	int amount;//数额
+	
+	struct Transaction * next;
+};
+typedef struct Transaction Transaction;
+
+Transaction * tHead=NULL;
+Transaction * tTail=NULL;
 struct Account
 {
 	char username[100];
 	char password[100];
+	int money;
 	
 	struct Account * next;
 };
@@ -72,8 +87,69 @@ void signIn()
 		}
 	}
 }
+void drawMoney()
+{
+	printf("请输入取款金额：");
+	int money;
+	scanf("%d",&money);
+	
+	if(curAccount->money>=money)
+	{
+		curAccount->money-=money;
+		printf("取款成功！\n");
+		
+		//产生交易记录
+		
+		//创建结点
+		Transaction * newNode=(Transaction *)malloc(sizeof(Transaction));
+		
+		//结点初始化
+		newNode->next=NULL;
+		strcpy(newNode->username,curAccount->username);
+		newNode->timestamp=time(NULL);
+		newNode->type=1;
+		newNode->amount=money;
+		
+		//添加交易记录结点到链表 
+		if(tHead==NULL)
+		{
+			tHead=newNode;
+			tTail=newNode;
+		}
+		else
+		{
+			tTail->next=newNode;
+			tTail=newNode;
+		}
+		 
+	}
+	else
+	{
+		printf("余额不足!\n");
+	}
+}
 
-//加载成功返回1，加载失败返回0 
+void saveMoney()
+{
+	printf("请输入存款金额：");
+	int money;
+	scanf("%d",&money);
+	
+	curAccount->money+=money;
+	printf("存款成功！\n");
+}
+
+void homePage()
+{
+	system("cls");
+	//updatePassword(); 
+	
+	drawMoney();
+	
+	//saveMoney();
+}
+
+
 int loadData()
 {
 	FILE * fp=fopen("D:/atm.txt","r"); 
@@ -107,6 +183,21 @@ int loadData()
 		return 1;		
 	}
 }
+void saveTransaction()
+{
+	FILE *fp=fopen("D:/transaction.txt","w");
+	if(fp!=NULL)
+	{
+		Transaction * curp=tHead;
+		while(curp!=NULL)
+		{
+			fprintf(fp,"%s %ld %d %d\n",curp->username,curp->timestamp,curp->type,curp->amount);
+			curp=curp->next;
+		}
+		fclose(fp);
+	}
+}
+
 
 int main()
 {
